@@ -1,0 +1,99 @@
+= esa-program
+  @esa-section
+  {[ ?':' esa-section | * > ]}
+
+= esa-section
+  ':' SYMBOL/section
+  @esa-rule
+  {[ ?':' @esa-rule | * > ]}
+  ':' SYMBOL/end SYMBOL
+
+= esa-rule
+  [ ?':' [ ?SYMBOL/type @esa-type
+         | ?SYMBOL/class @esa-class
+         | ?SYMBOL/method-for @esa-method
+         | *
+         ]
+   | *
+   ]
+       
+= esa-type
+  ':' SYMBOL/type SYMBOL '{' SYMBOL {[ ?SYMBOL SYMBOL | * > ]}  '}'
+
+= esa-class
+  ':' SYMBOL/class '{' @esa-ident {[ @esa-ident | * > ]} '}'
+
+= esa-method
+  ':' SYMBOL/method-for @esa-qualified-ident @esa-ident @formal-parameters @return-type
+  '{' @statements '}'
+
+= statements
+  &statement
+  {[ &statement | * > ]}
+  
+- esa-ident
+  [ ?SYMBOL @optional-question-mark ^ok
+  | ':' [ ?SYMBOL/self | ?SYMBOL/true | ?SYMBOL/false ] ^ok
+  | * ^fail
+  ]
+
+= esa-qualified-ident
+  @esa-ident [ ?'/' '/' SYMBOL | * ] @optional-question-mark
+
+= optional-question-mark
+  [ '?' | * ]
+
+- formal-parameters
+  [ ?'(' '(' [ &typed-parameter | ?SYMBOL SYMBOL ] ')' ^ok | * ^fail ]
+
+- typed-parameter
+  [ ?'(' '(' @esa-qualified-symbol SYMBOL ')' ^ok | * ^fail ]
+
+= return-type
+  [ ?'^' '^' [ ?SYMBOL/ok SYMBOL/ok | ?SYMBOL/fail SYMBOL/fail ] | * ]
+
+- statement
+  [ &return-statement ^ok
+  | &forall-statement ^ok
+  | &if-statement ^ok
+  | &pred-call-external ^ok
+  | * ^fail
+  ]
+
+- return-statement
+'^' [ SYMBOL/ok | SYMBOL/fail ] ^ok
+
+- forall-statement
+  [ ?SYMBOL/forall
+    SYMBOL/forall SYMBOL ':' SYMBOL/in @expr @statement-block ^ok
+  | * ^fail
+  ]
+
+- if-statement
+  [ ?SYMBOL/if
+    SYMBOL/if @expr
+    @statement-block
+    [ ?SYMBOL/else @else-statement-block | * ]
+    ^ok
+  | * ^fail
+  ]
+  
+- pred-call-external
+  [?SYMBOL
+    @esa-qualified-ident &actual-parameters ^ok
+  | * ^fail
+  ]
+
+- actual-parameters
+  [ ?'(' '(' @esa-qualified-ident {[ @esa-qualified-ident | * > ]} ')' | * ] ^ok
+  
+= expr
+  @qualified-esa-ident
+  
+
+= statement-block
+  '{' @statements '}'
+  
+= else-statement-block
+  SYMBOL/else '{' @statements '}'
+  

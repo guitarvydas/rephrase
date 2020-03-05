@@ -1,0 +1,227 @@
+= <rrp>
+  {[ ?'=' @<rparse-rule>
+   | ?'-' @<rparse-predicate>
+   | * >
+  ]}
+  EOF
+
+
+- <rparse-token>
+  [ ?CHARACTER/'
+     CHARACTER/' CHARACTER CHARACTER/'
+     ^ok
+  |
+$ (parser-success-p (look-upcase-symbol? p))
+$    (input-upcase-symbol p) 
+$    (cond ((parser-success-p (look-char? p #\/))
+$           (input-char p #\/)
+$           (cond ((parser-success-p (look? p :character))
+$                  (input p :character)
+$                  (emit p "(input-char p #\~c)" (token-text (accepted-token p))))
+$                 (t
+$                  (input p :symbol)
+$                  (emit p "(input-symbol p ~s)" (token-text (accepted-token p))))))
+$          (t
+$           (emit p "(input p :~a)" (token-text (accepted-token p)))))
+      ^ok
+   | * ^fail
+   ]
+
+- <rparse-noop>
+  [ ?'*' '*'
+$        (emit p " t ")
+    ^ok
+  | * ^fail
+  ]
+
+- <rparse-expr>
+  [ &<rparse-token> ^ok
+  | &<rparse-noop>  ^ok
+  | *              ^fail
+  ]
+
+- <rparse-lookahead-token-expr>
+  [ ?CHARACTER/'
+     CHARACTER/'
+$    (emit p "(look-char? p #\\c)" (token-text (accepted-token p)))
+     CHARACTER/'
+     ^ok
+  |
+$ (parser-success-p (look-upcase-symbol? p))
+$    (input-upcase-symbol p) 
+$    (cond ((parser-success-p (look-char? p #\/))
+$           (input-char p #\/)
+$           (cond ((parser-success-p (look? p :character))
+$                  (input p :character)
+$                  (emit p "(look-char? p #\~c)" (token-text (accepted-token p))))
+$                 (t
+$                  (input p :symbol)
+$                  (emit p "(look? p ~s)" (token-text (accepted-token p))))))
+$          (t
+$           (emit p "(look? p :~a)" (token-text (accepted-token p)))))
+      ^ok
+   | * ^fail
+   ]
+
+- <rparse-lookahead-noop>
+  [ ?'*' '*'
+$        (emit p " t ")
+    ^ok
+  | * ^fail
+  ]
+
+- <rparse-lookahead-expr>
+  [ ?'?'
+     '?'
+$    (emit p " t ")
+     ^ok
+  | * ^fail
+  ]
+
+- <rparse-statement>
+  [ &<rparse-cycle> ^ok
+  | &<rparse-choice> ^ok
+  | &<rparse-return> ^ok
+  | &<rparse-cycle-exit> ^ok
+  | &<rparse-input-token> ^ok
+  | &<rparse-lookahead> ^ok
+  | &<rparse-noop> ^ok
+  | &<rparse-rule-call> ^ok
+  | &<rparse-predicate-call> ^ok
+  | &<rparse-external-call> ^ok
+  | * ^fail
+  ]
+
+- <rparse-statements>
+  [ &<rparse-statement>
+    {[ &<rparse-statement>
+$      (emit p "~%")
+     | * >
+     ]}
+     ^ok
+   | * ^fail
+   ]
+
+- <rparse-cond-statements>
+  [ &<rparse-statement>
+     {[ &<rparse-statement>
+     | * ^ok
+     ]}
+   | * ^fail
+   ]
+
+- <rparse-cycle>
+  [ ?'{' 
+     '{'
+$    (emit p "(loop~%")
+     @<rparse-statements>
+     '}'
+$    (emit p ");loop~%")
+     ^ok
+   | * ^fail
+   ]
+
+- <rparse-choice>
+  [ ?'['
+     '['
+$    (emit p "(cond~%")
+$    (emit p "  (")
+     @<rparse-cond-statements>
+$    (emit p ");choice clause~%")
+     {[ ?'|'
+         '|' 
+$        (emit p "(")
+         @<rparse-statements>
+$        (emit p ");choice alt~%")
+      ']'
+$     (emit p ");choice~%")
+      | * >
+     ]}
+     ^ok
+   | * ^fail
+   ]
+
+- <rparse-input-token>
+  [ &<rparse-expr> ^ok
+  | * ^fail
+  ]
+
+- <rparse-lookahead>
+  [ ?'?'
+     '?'
+     [ &<rparse-lookahead-expr> ^ ok
+     | * ^fail
+     ]
+  | * ^fail
+  ]
+
+- <rparse-rule-call>
+  [ ?'@'
+     '@' SYMBOL
+$     (emit p "(call-rule p #'~a)" (token-text (accepted-token p)))
+     ^ok
+  | * ^fail
+  ]
+
+- <rparse-predicate-call>
+  [ ?'&'
+     '^' SYMBOL
+$     (emit p "(call-predicate p #'~a)" (token-text (accepted-token p)))
+     ^ok
+  | * ^fail
+  ]
+
+- <rparse-external-call>
+  [ ?SYMBOL
+     SYMBOL
+$     (emit p "(call-external p #'~a)" (token-text (accepted-token p)))
+     ^ok
+  | * ^fail
+  ]
+
+- <rparse-cycle-exit>
+  [ ?'>'
+     '>'
+$    (emit p "(return)")
+     ^ ok
+  | * ^fail
+  ]
+
+- <rparse-return>
+  [ ?'^'
+     '^'
+     [ ?SYMBOL/ok   SYMBOL/ok
+     | ?SYMBOL/fail SYMBOL/fail
+     ]
+     [
+$      (string= "ok" (token-text (accepted-token p)))
+$           (emit p "(return-from ~a :ok)" (current-rule p))
+            ^ok
+     |
+$       (string= "fail" (token-text (accepted-token p)))
+$           (emit p "(return-from ~a :fail)" (current-rule p))
+            ^ok
+     | *
+            ^fail
+     ]
+  | * ^fail
+  ]
+
+- <rparse-rule>
+  '='
+  SYMBOL
+$ (setf (current-rule p) (token-text (accepted-token p)))
+$ (emit p "(defmethod ~a ((p parser));rule~%" (current-rule p))
+  @<rparse-statements>
+$ (emit p ");rule~%")
+  ^ok
+
+- <rparse-predicate>
+  '='
+  SYMBOL
+$ (setf (current-rule p) (token-text (accepted-token p)))
+$ (emit p "(defmethod ~a ((p parser));pred~%" (current-rule p))
+  @<rparse-statements>
+$ (emit p ");pred~%")
+  ^ok
+

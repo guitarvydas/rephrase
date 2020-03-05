@@ -1,0 +1,44 @@
+= <architecture>
+  <class-definition>
+
+= <class-definition>
+  'class :symbol
+  <method-declaration>+
+  'end 'class
+  
+= <method-declaration>
+  [ :symbol [ ?question :question
+           | * ]
+  | 'lpar :symbol 'rpar
+  ]
+
+= <loop>
+  'loop
+  <body>
+  'end 'loop
+
+= <body>
+  [ ?foreach <foreach>
+  | ?let <let>
+  | * <method-call>
+  ]
+
+= <foreach>
+  'foreach :symbol 'in :symbol
+  <body>+
+  'end 'foreach
+
+= <let>
+  'let :symbol '= <obejct-ref>
+  'end 'let
+
+= <object-ref>
+  :symbol [ ?. <fields> | * ] <parameters>
+
+= <fields>
+  [ ?. ')
+  | *]
+
+= <list-of-rvals>
+  :symbol+
+
