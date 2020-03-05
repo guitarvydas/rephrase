@@ -36,6 +36,32 @@ Could I have built this pipeline using functions?  Yes.  But, only because each 
 
 The one-in, one-out paradigm falls apart when scaled up. (It becomes harder to express and to manage and wastes human intellectual power).
 
+==========
+syntax - rp uses left-handles to make it easier to parse, each left-handle is exactly one character (which makes it even easier to parse :-)
+
+= <name>            define a rule with given name
+- <name>            define a predicate rule with given name, predicate can contain ^ok or ^fail operator
+    to perform certain actions (e.g. anything not related to parsing), but we ignore that semantic check for now
+
+[A-Z]+ - (all caps) input a token with the kind given by the symbol (e.g. STRING means input a string), else, error,
+    if the token name is followed by "/text", then token must be a symbol and its text must match the given text (text is case sensitive)
+'x' character token match - token kind must be :character and text must be a single char with value given (e.g. x)
+?'x' - look ahead for a :character token which matches given character, succeed if matched, else fail
+?TTT - look ahead for a token with the given kind, succeed if so, else fail
+?TTT/text - look ahead for a token with the given kind and text, succeed if so, else fail
+* - no-op, always succeeds, only allowed in choice exprs
+= - define a new rule whose name is that of the next symbol (e.g. = <architecture> starts a new rule called "<architecture>", N.B. "<" is a valid start-char, and ">" and "-" are valid follow-chars for symbols
+[ - start a choice, next item must be a lookahead
+| - start another choice clause, next item must be one of...  '<symbol>, :<symbol>, ?<symbol> or *
+| * "otherwise"/"else" choice clause, see * above
+] - end choice
+@symbol - call rule named by the symbol
+&symbol - call predicate named by the symbol
+symbol - call external routine
+^ok or ^fail   return status from predicate
+{ begin cycle (forever)
+} end cycle
+> exit cycle
 
 ==========
 
