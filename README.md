@@ -47,7 +47,7 @@ Input events are 2-tuples {pin-name, data}.  The pin-name is relative to the par
 
 Output events are 2-tuples {pin-name, data}.  The pin-name is relative to the part producing the output event.
 
-Output events are deferred.  When created by SEND(), they are simple enqueued onto the output queue of the the sending event.  When the part has finished processing (one input event), the output queue is released.  Each output event is converted into an input event and pushed onto the input queue of the receiving part.
+Output events are deferred.  When created by SEND(), they are simply enqueued onto the output queue of the the sending event.  When the part has finished processing (one input event), the output queue is released.  Each output event is converted into an input event and pushed onto the input queue of the receiving part.
 
 A part which contains other parts - a composite part -  is called a "schematic" (or schem for short).
 
