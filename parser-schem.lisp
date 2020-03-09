@@ -54,4 +54,4 @@
 (defun cl-user::ptest ()
   (asdf::run-program "rm -rf ~/.cache/common-lisp")
   (ql:quickload :rephrase)
-  (rephrase::run-parser (asdf:system-relative-pathname :rephrase "rp.rp")))
+  (rephrase::run-parser (asdf:system-relative-pathname :rephrase "esa.rp")))

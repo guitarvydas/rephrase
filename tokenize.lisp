@@ -12,7 +12,7 @@
 (defmethod e/part:first-time ((self tokenize))
   (setf (state self) :idle)
   (setf (nline self) 1)
-  (setf (nposition self) 1))  
+  (setf (nposition self) 0))  
 
 (defmethod e/part:react ((self tokenize) (e e/event:event))
   #+nil(format *standard-output* "~&tokenize in state ~s gets ~s ~s~%" (state self) (@pin self e) (@data self e))
@@ -23,7 +23,7 @@
        (:start
         (let ((str (alexandria:read-file-into-string (e/event:data e))))
           (setf (stream self) (make-string-input-stream str))
-          (setf (nposition self) 1)
+          (setf (nposition self) 0)
           (setf (nline self) 1)
           (setf (state self) :running)))))
        
@@ -37,7 +37,7 @@
             (unless reached-eof
               (when (char= #\newline c)
                 (incf (nline self))
-                (setf (nposition self) 1)))
+                (setf (nposition self) 0)))
             (let ((tok (make-token :position (nposition self)
                                    :line (nline self)
                                    :kind (if reached-eof :EOF :character)

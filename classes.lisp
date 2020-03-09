@@ -6,6 +6,7 @@
    (next-token :accessor next-token :initform nil)
    (accepted-token :accessor accepted-token :initform nil)
    (state :accessor state :initform :idle)
-   (current-rule :accessor current-rule)))
+   (current-rule :accessor current-rule)
+   (depth :accessor depth :initform 0)))
    
 
